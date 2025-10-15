@@ -4,24 +4,45 @@ import java.io.*;
 public class DateClient {
     public static void main(String[] args) {
         try {
-            // Connect to server at localhost:6013
             Socket sock = new Socket("172.16.34.35", 7000);
-            System.out.println("Host Connected");
+            System.out.println("Connected to server.");
 
-            // Create input stream to read data from server
-            InputStream in = sock.getInputStream();
-            BufferedReader bin = new BufferedReader(new InputStreamReader(in));
+            BufferedReader inputFromServer = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            PrintWriter outputToServer = new PrintWriter(sock.getOutputStream(), true);
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
 
-            // Read and print lines received from server
-            String line;
-            while ((line = bin.readLine()) != null) {
-                System.out.println(line);
+            System.out.println("Server: " + inputFromServer.readLine());
+            System.out.println("Type a message to send (type 'exit' to quit):");
+
+            String userMessage;
+            while (true) {
+                System.out.print("Client: ");
+                userMessage = userInput.readLine();
+
+                if (userMessage == null || userMessage.equalsIgnoreCase("exit")) {
+                    outputToServer.println("exit");
+                    System.out.println("Connection closed.");
+                    break;
+                }
+
+                outputToServer.println(userMessage);
+
+                String response = inputFromServer.readLine();
+                if (response != null) {
+                    System.out.println("Server: " + response);
+                } else {
+                    System.out.println("Server disconnected.");
+                    break;
+                }
             }
 
-            // Close connection
             sock.close();
-        } catch (IOException ioe) {
-            System.err.println(ioe);
+            inputFromServer.close();
+            outputToServer.close();
+            userInput.close();
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
         }
     }
 }
