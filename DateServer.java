@@ -4,24 +4,37 @@ import java.io.*;
 public class DateServer {
     public static void main(String[] args) {
         try {
-            // Create a server socket on port 6013
             ServerSocket sock = new ServerSocket(7000);
-            System.out.println("Server started 7000");
+            System.out.println("Server started on port 7000");
 
-            // Listen indefinitely for connections
             while (true) {
-                try (Socket client = sock.accept() // Accept client connection
-                ) {
-                    System.out.println("Client Connected");
-                    // Create a PrintWriter to send data to the client
-                    PrintWriter pout = new PrintWriter(client.getOutputStream(), true);
-                    // Send current date and time
-                    pout.println(new java.util.Date().toString());
-                    // Close connection with client
+                Socket client = sock.accept();
+                System.out.println("Client connected.");
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                PrintWriter out = new PrintWriter(client.getOutputStream(), true);
+
+                // Initial welcome message
+                out.println("Welcome! Current server time: " + new java.util.Date().toString());
+
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Client: " + message);
+
+                    if (message.equalsIgnoreCase("exit")) {
+                        out.println("Goodbye!");
+                        break;
+                    }
+
+                    // Send only the current date/time (no message echo)
+                    out.println("Server time: " + new java.util.Date().toString());
                 }
+
+                client.close();
+                System.out.println("Client disconnected.");
             }
         } catch (IOException ioe) {
-            System.err.println(ioe);
+            System.err.println("Error: " + ioe.getMessage());
         }
     }
 }
